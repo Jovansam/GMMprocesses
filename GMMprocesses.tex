@@ -1,0 +1,69 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{palatino}
+
+\lstset{basicstyle=\ttfamily,breaklines=true}
+
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\Var}{Var}
+
+\title{Code to estimate a permanent-transitory income process}
+\author{Jonathan Shaw}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+This note describes accompanying code to estimate a permanent-transitory income process using the generalised method of moments (GMM).
+
+\section{Population moments}
+
+The income process we consider is the following:
+%
+\begin{align}
+	y_{it} &= u_{it} + v_{it} \\
+    u_{it} &= u_{i,t-1} + w_{it} \\
+    v_{it} &= e_{i,t-1} + \theta e_{it}
+\end{align}
+%
+where \(y_{it}\) is log income, \(u_{it}\) is a permanent (random walk) component and \(v_{it}\) is is a transitory MA(1) process. \(w_{it}\) and \(e_{it}\) are iid uncorrelated shocks.
+
+The GMM approach to estimation involves calculating sample variances and autocovariances of \(y_{it}\) in levels and/or first differences and relating them to their population counterparts.
+
+In levels, the population moments of interest are:
+%
+\begin{align}
+	\Cov(y_{it}, y_{is}) &= \Cov(u_{it}, u_{is}) + \Cov(v_{it}, v_{is}) \\
+	\Cov(u_{it}, u_{is}) &= \sigma_{u_{1}}^2 + (\min(t,s) - 1)\sigma_w^2 \\
+	\Cov(v_{it}, v_{is}) &=\begin{cases}
+		(1 + \theta^2)\sigma_w^2 & \text{if $t=s$} \\
+		\theta\sigma_e^2 & \text{if $|t-s|=1$} \\
+		0 & \text{otherwise}
+	\end{cases}
+\end{align}
+%
+where we assume we estimate the variance of the initial value of the permanent process as a separate parameter, \(\sigma_{u_{1}}^2\)
+
+In first differences, the population moments of interest are:
+%
+\begin{align}
+	\Cov(\Delta y_{it}, \Delta y_{is}) &=\begin{cases}
+		\sigma_w^2 + 2(\theta^2 - \theta + 1)\sigma_e^2 & \text{if $t=s$} \\
+		-(\theta - 1)^2\sigma_e^2 & \text{if $|t-s|=1$} \\
+		-\theta\sigma_e^2 & \text{if $|t-s|=2$} \\ 	
+		0 & \text{otherwise}
+	\end{cases}
+\end{align}
+%
+Notice that none of the moments in first differences depend upon the variance of the initial value of the permanent process, \(\sigma_{u_{1}}^2\), so we won't be able to estimate this.
+
+\section{Estimation code}
+
+\texttt{estimate\_income\_process\_Perm\_MA1.r} contains R code to simulate data and estimate the parameters of the wage process using GMM based on the moments above. \texttt{estimate\_income\_process\_Perm\_MA1.do} contains the corresponding Stata code. Each take a few minutes to run.
+
+\end{document}
